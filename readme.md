@@ -1,5 +1,3 @@
-#TODO
-
 # Implement an API api that allows to manage products.
 
 # We can read, update , delete and create products.
