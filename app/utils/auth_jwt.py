@@ -5,11 +5,10 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
 
-from app import schemas
-from app.database import SessionLocal
-from app.repository import get_user_by_username
+import app.schemas.schemas as schemas
+from app.utils.database import SessionLocal
+from app.repositories.users import get_user_by_username
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "bdbd40ed3d6b46a04a86f79aa701dc277d1b0de848a1a1fb7992466828501b56"

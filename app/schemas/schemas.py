@@ -14,7 +14,16 @@ class ProductBase(BaseModel):
 
 
 class ProductCreate(ProductBase):
-    pass
+    class Config:
+        json_schema_extra = {
+            "examples": [
+                {
+                    "name": "Test Product",
+                    "description": "Test Description",
+                    "price": 2
+                }
+            ]
+        }
 
 
 class Product(ProductBase):

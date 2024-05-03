@@ -1,19 +1,23 @@
 from datetime import timedelta
-from typing import List, Annotated
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette import status
 from starlette.responses import JSONResponse
 
-from app import schemas
-import app.auth_jwt as authentication
-from app.database import SessionLocal
-import app.repository as repository
+import app.routers.products_router as products_router
 
-from app.exceptions import ProductNotFound
+import app.repositories.users as users_repository
+import app.schemas.schemas as schemas
+import app.utils.auth_jwt as authentication
+
+from app.utils.database import SessionLocal
+
+
+from app.utils.exceptions import ProductNotFound
 
 app = FastAPI()
+app.include_router(products_router.router)
 
 
 @app.exception_handler(ProductNotFound)
@@ -28,40 +32,7 @@ async def product_not_found_exception_handler(request, exc):
 def create_user(user: schemas.UserCreate):
     db = SessionLocal()
     user.password = authentication.get_password_hash(user.password)
-    return repository.create_user(db, user)
-
-
-@app.post("/products", response_model=schemas.Product)
-def create_product(product: schemas.ProductCreate):
-    db = SessionLocal()
-    return repository.create_product(db, product)
-
-
-@app.get("/products/{product_id}", response_model=schemas.Product)
-def get_product(product_id: int):
-    db = SessionLocal()
-    product = repository.get_product(db, product_id)
-    if product is None:
-        raise ProductNotFound()
-    return product
-
-
-@app.get("/products", response_model=List[schemas.Product])
-def get_products(skip: int = 0, limit: int = 100):
-    db = SessionLocal()
-    return repository.get_products(db, skip, limit)
-
-
-@app.delete("/products/{product_id}", response_model=schemas.Product)
-def delete_product(product_id: int):
-    db = SessionLocal()
-    return repository.delete_product(db, product_id)
-
-
-@app.put("/products/{product_id}", response_model=schemas.Product)
-def update_product(product_id: int, product: schemas.ProductCreate):
-    db = SessionLocal()
-    return repository.update_product(db, product_id, product)
+    return users_repository.create_user(db, user)
 
 
 @app.post("/token")
