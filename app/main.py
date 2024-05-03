@@ -1,13 +1,16 @@
+from datetime import timedelta
 from typing import List, Annotated
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from starlette import status
 from starlette.responses import JSONResponse
 
 from app import schemas
-from app.auth import fake_users_db, UserInDB, fake_hash_password, User, get_current_active_user
+import app.auth_jwt as authentication
 from app.database import SessionLocal
 import app.repository as repository
+
 from app.exceptions import ProductNotFound
 
 app = FastAPI()
@@ -21,9 +24,11 @@ async def product_not_found_exception_handler(request, exc):
     )
 
 
-@app.get("/")
-def home():
-    return {"status": "ok"}
+@app.post("/users", response_model=schemas.User)
+def create_user(user: schemas.UserCreate):
+    db = SessionLocal()
+    user.password = authentication.get_password_hash(user.password)
+    return repository.create_user(db, user)
 
 
 @app.post("/products", response_model=schemas.Product)
@@ -60,20 +65,20 @@ def update_product(product_id: int, product: schemas.ProductCreate):
 
 
 @app.post("/token")
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user_dict = fake_users_db.get(form_data.username)
-    if not user_dict:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    user = UserInDB(**user_dict)
-    hashed_password = fake_hash_password(form_data.password)
-    if not hashed_password == user.hashed_password:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authentication.authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    return {"access_token": user.username, "token_type": "bearer"}
+    access_token_expires = timedelta(minutes=authentication.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = authentication.create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.get("/users/me")
-async def read_users_me(
-        current_user: Annotated[User, Depends(get_current_active_user)],
-):
-    return current_user
+@app.get("/users/me/items/")
+def read_own_items(user: schemas.User = Depends(authentication.get_current_active_user)):
+    return {"username": user.username, "email": user.email}

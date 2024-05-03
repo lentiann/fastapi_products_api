@@ -22,3 +22,22 @@ class Product(ProductBase):
 
     class Config:
         orm_mode = True
+
+
+class UserBase(BaseModel):
+    username: str
+    email: str
+    full_name: str
+    active: bool
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class User(UserBase):
+    id: int
+    products: list[Product] = []
+
+    class Config:
+        orm_mode = True
