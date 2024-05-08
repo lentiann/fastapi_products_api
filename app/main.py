@@ -13,7 +13,6 @@ import app.utils.auth_jwt as authentication
 
 from app.utils.database import SessionLocal
 
-
 from app.utils.exceptions import ProductNotFound
 
 app = FastAPI()
@@ -26,6 +25,11 @@ async def product_not_found_exception_handler(request, exc):
         status_code=404,
         content={"message": exc.message},
     )
+
+
+@app.get("/")
+def read_root():
+    return {"msg": "Hello World"}
 
 
 @app.post("/users", response_model=schemas.User)

@@ -4,7 +4,7 @@ from pydantic import BaseModel, field_validator
 class ProductBase(BaseModel):
     name: str
     description: str
-    price: int
+    price: float
 
     @field_validator('price')
     def price_must_be_positive(cls, price):

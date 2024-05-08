@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -24,7 +24,7 @@ class Product(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), index=True)
     description = Column(String(250), index=True)
-    price = Column(Integer)
+    price = Column(Float)
     owner_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="products")
